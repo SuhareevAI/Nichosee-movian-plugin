@@ -1,0 +1,14 @@
+{
+	"description": "",
+	"author": "Suhareev", 
+	"homepage": "",
+	"title": "Ничоsee",
+	"synopsis": "Ничоsee :: Новые фильмы и всегда в отличном качестве",
+	"version": "0.0.1",
+    "file": "Nichosee.js",
+	"showtimeVersion": "4.8",
+	"type": "ecmascript",
+	"icon": "logo.png",
+	"id": "Nichosee",
+	"category": "video"
+}
