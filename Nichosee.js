@@ -1,3 +1,27 @@
+const genresConst = {
+    'Biography': 'Биография',
+    'Western': 'Вестерн',
+    'War': 'Военный',
+    'Documentary': 'Документальный',
+    'Drama': 'Драма',
+    'History': 'Исторический',
+    'Comedy': 'Комедия',
+    'Crime': 'Криминал',
+    'Romance': 'Мелодрама',
+    'Mystery': 'Мистика',
+    'Music': 'Музыкальный',
+    'Animation': 'Мультфильмы',
+    'Adventure': 'Приключения',
+    'Family': 'Семейный',
+    'Sport': 'Спорт',
+    'Thriller': 'Триллер',
+    'Horror': 'Ужасы',
+    'Sci-Fi': 'Фантастика',
+    'Fantasy': 'Фэнтези',
+    'Action': 'Экшн',
+    'N/A': 'Жанр не указан'
+}
+
 function GetFormatDate(date) {
     var date = new Date(date);
     return date.getDate() + '.' + (date.getMonth() + 1) + '.' + date.getFullYear();
@@ -7,124 +31,39 @@ function GetTranslateGenres(genres) {
     genres = genres.split(",");
 
     genres.forEach(function (genre, index) {
-        switch (genres[index].trim()) {
-            case 'Comedy':
-                {
-                    genres[index] = "Комедия";
-                    break;
-                }
-            case 'Drama':
-                {
-                    genres[index] = "Драма";
-                    break;
-                }
-            case 'Action':
-                {
-                    genres[index] = "Экшн";
-                    break;
-                }
-            case 'Adventure':
-                {
-                    genres[index] = "Приключения";
-                    break;
-                }
-            case 'Thriller':
-                {
-                    genres[index] = "Триллер";
-                    break;
-                }
-            case 'Romance':
-                {
-                    genres[index] = "Мелодрама";
-                    break;
-                }
-            case 'Crime':
-                {
-                    genres[index] = "Криминал";
-                    break;
-                }
-            case 'Horror':
-                {
-                    genres[index] = "Ужасы";
-                    break;
-                }
-            case 'Biography':
-                {
-                    genres[index] = "Биография";
-                    break;
-                }
-            case 'Mystery':
-                {
-                    genres[index] = "Мистика";
-                    break;
-                }
-            case 'Sci-Fi':
-                {
-                    genres[index] = "Фантастика";
-                    break;
-                }
-            case 'Fantasy':
-                {
-                    genres[index] = "Фэнтези";
-                    break;
-                }
-            case 'History':
-                {
-                    genres[index] = "Исторический";
-                    break;
-                }
-            case 'Family':
-                {
-                    genres[index] = "Семейный";
-                    break;
-                }
-            case 'Animation':
-                {
-                    genres[index] = "Мультфильмы";
-                    break;
-                }
-            case 'Music':
-                {
-                    genres[index] = "Музыкальный";
-                    break;
-                }
-            case 'Sport':
-                {
-                    genres[index] = "Спорт";
-                    break;
-                }
-            case 'War':
-                {
-                    genres[index] = "Военный";
-                    break;
-                }
-            case 'Western':
-                {
-                    genres[index] = "Вестерн";
-                    break;
-                }
-            case 'N/A':
-                {
-                    genres[index] = "Не указан";
-                    break;
-                }
-            case 'Documentary':
-                {
-                    genres[index] = "Документальный";
-                    break;
-                }
-        }
+        genres[index] = genresConst[genres[index].trim()];
     });
 
     return genres.join(", ");
+}
 
+function GetPopular(page) {
+    var link = "https://nichosee.com/?type=json";
+
+    var items = JSON.parse(showtime.httpReq(link));
+
+    items.forEach(function (item) {
+        PrintLabelCinema(page, item);
+    });
+}
+
+function PrintLabelCinema(page, film) {
+    page.appendItem(plugin.getDescriptor().id + ":video:" + film.imdb_id, "video",
+        {
+            title: film.title_ru,
+            icon: "https://nichosee.com" + film.poster,
+            logo: "https://nichosee.com" + film.poster,
+            description: "Год выпуска: " + film.year
+                + "\nДата публикации: " + GetFormatDate(film.pub_date)
+                + "\nОценка IMDB: " + film.imdb_rating
+                + "\nЖанр: " + GetTranslateGenres(film.genre)
+        });
 }
 
 function GetItems(page, NumPage, haveMore, NewNumPage, genre) {
 
     if (haveMore) {
         setTimeout(function () {
-
             var link = "https://nichosee.com/archive/?type=json&page=" + NumPage;
 
             var postGenre;
@@ -142,16 +81,7 @@ function GetItems(page, NumPage, haveMore, NewNumPage, genre) {
 
             items.forEach(function (item) {
 
-                page.appendItem(plugin.getDescriptor().id + ":video:" + item.imdb_id, "video",
-                    {
-                        title: item.title_ru,
-                        icon: "https://nichosee.com" + item.poster,
-                        logo: "https://nichosee.com" + item.poster,
-                        description: "Год выпуска: " + item.year
-                        + "\nДата публикации: " + GetFormatDate(item.pub_date)
-                        + "\nОценка IMDB: " + item.imdb_rating
-                        + "\nЖанр: " + GetTranslateGenres(item.genre)
-                    });
+                PrintLabelCinema(page, item);
             });
 
             NewNumPage(NumPage + 1);
@@ -160,12 +90,12 @@ function GetItems(page, NumPage, haveMore, NewNumPage, genre) {
 }
 
 function AsyncPaginator(page, genre) {
-    var Numpage = 1;
+    var numPage = 1;
     var haveMore = true;
 
     (page.asyncPaginator = function loader() {
-        GetItems(page, Numpage, haveMore, function (newPage) {
-            Numpage = newPage;
+        GetItems(page, numPage, haveMore, function (newPage) {
+            numPage = newPage;
             page.haveMore(haveMore);
         }, genre);
     })();
@@ -198,7 +128,7 @@ function AsyncPaginator(page, genre) {
                 title: "Жанры"
             });
 
-        page.appendItem(plugin.getDescriptor().id + ":archive:", "directory",
+        page.appendItem(plugin.getDescriptor().id + ":archive:Архив:", "directory",
             {
                 title: "Архив"
             });
@@ -207,118 +137,23 @@ function AsyncPaginator(page, genre) {
     plugin.addURI(plugin.getDescriptor().id + ":genres", function (page) {
         setPageHeader(page, "Жанры");
 
-        page.appendItem(plugin.getDescriptor().id + ":archive:Action", "directory",
-            {
-                title: "Боевик"
+        for (var genre in genresConst) {
+            page.appendItem(plugin.getDescriptor().id + ":archive:" + genresConst[genre] + ":" + genre, "directory",
+                {
+                    title: genresConst[genre]
+                });
+        }
 
-            });
-        page.appendItem(plugin.getDescriptor().id + ":archive:Biography", "directory",
-            {
-                title: "Биография"
-
-            });
-
-        page.appendItem(plugin.getDescriptor().id + ":archive:Drama", "directory",
-            {
-                title: "Драма"
-
-            });
-
-        page.appendItem(plugin.getDescriptor().id + ":archive:Comedy", "directory",
-            {
-                title: "Комедия"
-
-            });
-
-        page.appendItem(plugin.getDescriptor().id + ":archive:Crime", "directory",
-            {
-                title: "Криминал"
-
-            });
-
-        page.appendItem(plugin.getDescriptor().id + ":archive:Romance", "directory",
-            {
-                title: "Мелодрама"
-
-            });
-        page.appendItem(plugin.getDescriptor().id + ":archive:Adventure", "directory",
-            {
-                title: "Приключения"
-
-            });
-        page.appendItem(plugin.getDescriptor().id + ":archive:Thriller", "directory",
-            {
-                title: "Триллер"
-
-            });
-
-
-        page.appendItem(plugin.getDescriptor().id + ":archive:Horror", "directory",
-            {
-                title: "Ужасы"
-
-            });
-
-        page.appendItem(plugin.getDescriptor().id + ":archive:Mystery", "directory",
-            {
-                title: "Мистика"
-
-            });
-        page.appendItem(plugin.getDescriptor().id + ":archive:Sci-Fi", "directory",
-            {
-                title: "Фантастика"
-
-            });
-        page.appendItem(plugin.getDescriptor().id + ":archive:Fantasy", "directory",
-            {
-                title: "Фэнтези"
-
-            });
-        page.appendItem(plugin.getDescriptor().id + ":archive:History", "directory",
-            {
-                title: "Исторический"
-
-            });
-        page.appendItem(plugin.getDescriptor().id + ":archive:Family", "directory",
-            {
-                title: "Семейный"
-
-            });
-        page.appendItem(plugin.getDescriptor().id + ":archive:Animation", "directory",
-            {
-                title: "Мультфильмы"
-
-            });
-        page.appendItem(plugin.getDescriptor().id + ":archive:Music", "directory",
-            {
-                title: "Музыкальный"
-
-            });
-        page.appendItem(plugin.getDescriptor().id + ":archive:Sport", "directory",
-            {
-                title: "Спорт"
-
-            });
-        page.appendItem(plugin.getDescriptor().id + ":archive:War", "directory",
-            {
-                title: "Военный"
-
-            });
-        page.appendItem(plugin.getDescriptor().id + ":archive:Western", "directory",
-            {
-                title: "Вестерн"
-
-            });
-        page.appendItem(plugin.getDescriptor().id + ":archive:Documentary", "directory",
-            {
-                title: "Документальный"
-
-            });
     });
 
-    plugin.addURI(plugin.getDescriptor().id + ":archive:(.*)", function (page, genre) {
+    plugin.addURI(plugin.getDescriptor().id + ":popular", function (page) {
+        setPageHeader(page, "Популярное");
+        GetPopular(page);
+    });
 
-        setPageHeader(page, "Архив");
+    plugin.addURI(plugin.getDescriptor().id + ":archive:(.*):(.*)", function (page, header, genre) {
+
+        setPageHeader(page, header);
 
         AsyncPaginator(page, genre);
 
